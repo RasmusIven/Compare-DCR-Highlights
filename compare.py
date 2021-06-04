@@ -96,30 +96,8 @@ def compare_list_annos(dict_a, dict_b):
 
 
 #------------------------------------- REST Handler ---------------------------------------#
-app = flask.Flask(__name__)
-app.config["DEBUG"] = True
+myapp = Flask(__name__)
 
-@app.route('/', methods=['POST'])
-def home():
-    content_dict = xmltodict.parse(request.data)
-    compare_type = content_dict['content']['compare_types']
-    a_xml, b_xml = content_dict['content']['source_graph'], content_dict['content']['target_graph']
-    
-    results = {}
-    for typ in compare_type['type']:
-        extract_1 = get_annos_from_xml(a_xml, typ)
-        extract_2 = get_annos_from_xml(b_xml, typ)
-        
-        results[typ] = {'source': extract_1, 'target': extract_2}
-        results[typ]['score'] = compare_list_annos(extract_2, extract_1)
-    return results
-        
-    
-    #return results
-    #results = compare_list_annos[extract_1, extract_2]
-    #simularity = result[0]
-    #return {
-    #    'statusCode': 200,
-    #    'body': results"""
-    #}
-app.run()
+@myapp.route("/")
+def hello():
+    return "Hello Flask, on Azure App Service for Linux"
