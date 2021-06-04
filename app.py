@@ -96,8 +96,8 @@ def compare_list_annos(dict_a, dict_b):
 
 
 #------------------------------------- REST Handler ---------------------------------------#
-myapp = Flask(__name__)
+app = Flask(__name__)
 
-@myapp.route("/")
+@app.route("/")
 def hello():
     return "Hello Flask, on Azure App Service for Linux"
