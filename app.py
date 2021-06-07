@@ -6,7 +6,7 @@ import xmltodict
 #   Given two graphs, compare them by identifying annotation matches.
 #   Created 02.13.21, Rasmus Iven Strømsted, DCR Solutions
 
-#------------------------------------- Import annotations from XML ---------------------------------------#
+#------------------------------------- Extract annotations from XML ---------------------------------------#
 def get_annos_from_xml(xml, annotation_type):
     """
     Given a Graph XML, extracts information about a specific annotation type, and return as dict.
@@ -105,19 +105,20 @@ def home():
     a_xml, b_xml = content_dict['content']['source_graph'], content_dict['content']['target_graph']
     
     results = {}
+    results['final_score'] = 0
+    counter = 0
     for typ in compare_type['type']:
         extract_1 = get_annos_from_xml(a_xml, typ)
         extract_2 = get_annos_from_xml(b_xml, typ)
         
         results[typ] = {'source': extract_1, 'target': extract_2}
         results[typ]['score'] = compare_list_annos(extract_2, extract_1)
+        
+        results['final_score'] = results['final_score'] + results[typ]['score']
+        counter = counter + 1
+    
+    if results['final_score'] != 0
+        results['final_score'] = results['final_score'] / counter
+    
     return results
         
-    
-    #return results
-    #results = compare_list_annos[extract_1, extract_2]
-    #simularity = result[0]
-    #return {
-    #    'statusCode': 200,
-    #    'body': results"""
-    #}
