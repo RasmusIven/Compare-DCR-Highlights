@@ -117,7 +117,7 @@ def home():
         results['final_score'] = results['final_score'] + results[typ]['score']
         counter = counter + 1
     
-    if results['final_score'] != 0
+    if results['final_score'] != 0:
         results['final_score'] = results['final_score'] / counter
     
     return results
