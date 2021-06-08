@@ -115,10 +115,11 @@ def home():
         results[typ]['score'] = compare_list_annos(extract_2, extract_1)
         
         results['final_score'] = results['final_score'] + results[typ]['score']
-        counter = counter + 1
+        if results[typ]['score'] != 0:
+            counter = counter + 1
     
     if results['final_score'] != 0:
         results['final_score'] = results['final_score'] / counter
     
-    return results
+    return results  
         
