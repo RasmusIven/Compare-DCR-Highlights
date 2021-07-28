@@ -123,12 +123,22 @@ def home():
     a_xml, b_xml = content_dict['content']['source_graph'], content_dict['content']['target_graph']
     
     results = {}
+    results['final_score'] = 0
+    counter = 0
     for typ in compare_type['type']:
         extract_1 = get_annos_from_xml(a_xml, typ)
         extract_2 = get_annos_from_xml(b_xml, typ)
         
         results[typ] = {'source': extract_1, 'target': extract_2}
         results[typ]['score'] = compare_list_annos(extract_2, extract_1)
+        
+        results['final_score'] = results['final_score'] + results[typ]['score']
+        if results[typ]['score'] != 0:
+            counter = counter + 1
+    
+    if results['final_score'] != 0:
+        results['final_score'] = results['final_score'] / counter
+    
     return results
         
     
