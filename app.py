@@ -113,17 +113,6 @@ def home():
         
         results[typ] = {'source': extract_1, 'target': extract_2}
         results[typ]['score'] = compare_list_annos(extract_2, extract_1)
-<<<<<<< HEAD
-        
-        results['final_score'] = results['final_score'] + results[typ]['score']
-        counter = counter + 1
-    
-    if results['final_score'] != 0:
-        results['final_score'] = results['final_score'] / counter
-    
-    return results
-=======
->>>>>>> parent of 1974a31 (Support for subprocesses)
         
         results['final_score'] = results['final_score'] + results[typ]['score']
         if results[typ]['score'] != 0:
