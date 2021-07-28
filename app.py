@@ -6,7 +6,7 @@ import xmltodict
 #   Given two graphs, compare them by identifying annotation matches.
 #   Created 02.13.21, Rasmus Iven Strømsted, DCR Solutions
 
-#------------------------------------- Import annotations from XML ---------------------------------------#
+#------------------------------------- Extract annotations from XML ---------------------------------------#
 def get_annos_from_xml(xml, annotation_type):
     """
     Given a Graph XML, extracts information about a specific annotation type, and return as dict.
@@ -17,36 +17,19 @@ def get_annos_from_xml(xml, annotation_type):
     num_anno = 0
     for highlight in xml["dcrgraph"]["specification"]["resources"]["custom"]["highlighterMarkup"]["highlights"]["highlight"]:
         if highlight["@type"] == annotation_type:
-            print(highlight["layers"]["layer"]["ranges"])
-            for range in highlight["layers"]["layer"]["ranges"].items():
-                anno = {}
-                if len(range[1]) == 2:
-                    for rang in range[1]:
-                        for key, value in rang.items():
-                            print(rang)
-                            if key == "@start":
-                                anno['start'] = value
-                            elif key == "@end":
-                                anno['end'] = value
-                            elif key == "#text":
-                                anno['text'] = value
-                        for key, value in highlight["items"]["item"].items():
-                            if key == "@id":
-                                anno['id'] = value
-                else:
-                    for key, value in range[1].items():
-                        print(range[1])
-                        if key == "@start":
-                            anno['start'] = value
-                        elif key == "@end":
-                            anno['end'] = value
-                        elif key == "#text":
-                            anno['text'] = value
-                    for key, value in highlight["items"]["item"].items():
-                        if key == "@id":
-                            anno['id'] = value
-                user_annos[num_anno] = anno
-                num_anno = num_anno + 1
+            anno = {}
+            for key, value in highlight["layers"]["layer"]["ranges"]["range"].items():
+                if key == "@start":
+                    anno['start'] = value
+                elif key == "@end":
+                    anno['end'] = value
+                elif key == "#text":
+                    anno['text'] = value
+            for key, value in highlight["items"]["item"].items():
+                if key == "@id":
+                    anno['id'] = value
+            user_annos[num_anno] = anno
+            num_anno = num_anno + 1
     return user_annos
 
 
@@ -114,7 +97,6 @@ def compare_list_annos(dict_a, dict_b):
 
 #------------------------------------- REST Handler ---------------------------------------#
 app = flask.Flask(__name__)
-app.config["DEBUG"] = True
 
 @app.route('/', methods=['POST'])
 def home():
@@ -131,6 +113,7 @@ def home():
         
         results[typ] = {'source': extract_1, 'target': extract_2}
         results[typ]['score'] = compare_list_annos(extract_2, extract_1)
+<<<<<<< HEAD
         
         results['final_score'] = results['final_score'] + results[typ]['score']
         counter = counter + 1
@@ -139,13 +122,15 @@ def home():
         results['final_score'] = results['final_score'] / counter
     
     return results
+=======
+>>>>>>> parent of 1974a31 (Support for subprocesses)
         
+        results['final_score'] = results['final_score'] + results[typ]['score']
+        if results[typ]['score'] != 0:
+            counter = counter + 1
     
-    #return results
-    #results = compare_list_annos[extract_1, extract_2]
-    #simularity = result[0]
-    #return {
-    #    'statusCode': 200,
-    #    'body': results"""
-    #}
-app.run()
+    if results['final_score'] != 0:
+        results['final_score'] = results['final_score'] / counter
+    
+    return results  
+        
