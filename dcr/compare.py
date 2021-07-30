@@ -55,7 +55,6 @@ class CompareSpans(Compare):
                                     score = self.give_score(ah.span(), bh.span())
                                     scores['points'] = scores['points'] + score
                                     matches.append({'score': score, 'matches': [a, b]})
-                                    print(vars(a), vars(b))
                                     target.remove(b)
                                     source.remove(a)
                                     break;
