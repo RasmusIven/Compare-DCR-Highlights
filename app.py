@@ -1,9 +1,9 @@
-import flask
-from flask import Flask, request, jsonify
+from flask import Flask, request
 import xml.etree.ElementTree as ET
 import typing
 from typing import List, Set, Dict, Tuple, Optional
 import json
+app = Flask(__name__)
 
 
 #   COMPARE HIGHLIGHTS ALGORITHM
@@ -13,7 +13,10 @@ import json
 #------------------------------------- Classes ---------------------------------------#
 
 def percentage(part, whole):
-    return 100 * float(part)/float(whole)
+    if part > 0 and whole > 0:
+        return 100 * float(part)/float(whole)
+    else:
+        return 0
 
 def overlap(start1, end1, start2, end2):
     """
@@ -40,6 +43,9 @@ class Elem:
         for H in self.highlights:
             ranges.append(H.span())
         return ranges
+        
+    def toJson(self):
+        return json.dumps(self, default=lambda o: o.__dict__)
 
     
 class H:
@@ -50,6 +56,8 @@ class H:
     def span(self) -> list:
         return [self.start, self.end]
 
+    def toJson(self):
+        return json.dumps(self, default=lambda o: o.__dict__)
     
 class Compare:
     def __init__(self, source: list, target: list, types: list):
@@ -59,19 +67,8 @@ class Compare:
         self.results = dict()
     
     def set_result(self, result:list, typ:str):
-        print(results)
-        print(typ)
         self.results[typ] = result
     
-    def get_score(self, typ) -> int:
-        source_count = len(self.source[f'{typ}'])
-        print(source_count)
-        #old_match_count = len(self.results[f'{typ}'])
-        score = 0
-        for match in self.results[f'{typ}']:
-            score = score + match['score']
-        print(score, source_count)
-        return percentage(score, source_count)
 
     
     
@@ -85,24 +82,37 @@ class CompareSpans(Compare):
         if aspan == bspan:
             score = 1
         elif overlap(aspan[0], aspan[1], bspan[1], bspan[1]):
-            score = 0.75
+            score = 0.9
 
         return score
 
     # given two lists of elements with highlights, find overlaps in highlights.
     def overlaps(self, typ) -> list:
         matches = []
-        for a in self.source[f'{typ}']:
+        source = self.source[f'{typ}']
+        target = self.target[f'{typ}']
+        scores ={}
+        scores['points'] = 0
+        for a in source:
             match = False
-            for ah in a.highlights:
-                for b in self.target[f'{typ}']:
-                    for bh in b.highlights:
-                        if match == False and self.give_score(ah.span(), bh.span() ) > 0:
-                            match = True
-                            score = self.give_score(ah.span(), bh.span())
-                            matches.append({'score': score, 'matches': [a, b]})
-                            break;
-        return matches
+            if a.type == typ:
+                for ah in a.highlights:
+                    for b in target:
+                        if b.type == typ:
+                            for bh in b.highlights:
+                                if match == False and self.give_score(ah.span(), bh.span() ) > 0:
+                                    match = True
+                                    score = self.give_score(ah.span(), bh.span())
+                                    scores['points'] = scores['points'] + score
+                                    matches.append({'score': score, 'matches': [a, b]})
+                                    print(vars(a), vars(b))
+                                    target.remove(b)
+                                    source.remove(a)
+                                    break;
+            
+        scores['amount'] = len(target) + len(source) + len(matches)
+        scores['score'] = percentage(scores['points'], scores['amount'])
+        return scores
 
 
 #------------------------------------- Import annotations from XML ---------------------------------------#
@@ -149,32 +159,30 @@ def xml_extraction(xml, types) -> dict:
 
 
 #------------------------------------- REST Handler ---------------------------------------#
-app = flask.Flask(__name__)
-app.config["DEBUG"] = True
 
 @app.route('/', methods=['POST'])
 def home():
-
-    root = ET.fromstring(request.data)
+    data = request.data
+    root = ET.fromstring(data)
     types = []
-
+    scores = {}
+    scores['final_score'] = 0
     for compare_type in root.findall(".//compare_types/type"):
         types.append(compare_type.text)
-    print(types)
     for graph in root.findall('.//source_graph/*'):
-        print(graph)
         source = xml_extraction(graph, types)
 
     for graph in root.findall('.//target_graph/*'):
         target = xml_extraction(graph, types)
     
-    matcher = CompareSpans(source, target, types)
-    matcher.results['role'] = matcher.overlaps('role')
-    print('score: ', matcher.get_score('role'))
-
-    score = matcher.get_score('role')
-    return json.dumps(score)
+    for type in types:
+        matcher = CompareSpans(source, target, type)
+        score = matcher.overlaps(type)
+        scores[type] = score
+        scores['final_score'] = scores['final_score'] + scores[type]['score']
     
-        
+    if scores['final_score'] != 0:
+        scores['final_score'] = scores['final_score'] / len(types)
 
-app.run()
+
+    return scores
